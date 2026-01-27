@@ -80,7 +80,7 @@ map.on("click", e => {
 function buildRoute(start, end) {
   if (!start || !end) return;
 
-  // Remove previous route
+  // Remove previous route if it exists
   if (routingControl) map.removeControl(routingControl);
 
   routingControl = L.Routing.control({
@@ -93,7 +93,7 @@ function buildRoute(start, end) {
     },
     addWaypoints: false,
     draggableWaypoints: false,
-    fitSelectedRoutes: true,
+    fitSelectedRoutes: true, // automatically fit map bounds
     showAlternatives: false
   }).addTo(map);
 
@@ -122,3 +122,4 @@ function resetAll() {
   if (startMarker) map.removeLayer(startMarker);
   if (endMarker) map.removeLayer(endMarker);
 }
+
