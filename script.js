@@ -19,6 +19,10 @@ function rand(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function metersBetween(a, b) {
+  return map.distance([a.lat, a.lng], [b.lat, b.lng]);
+}
+
 // ===================== TRAFFIC LIGHT =====================
 class TrafficLight {
   constructor(lat, lng) {
@@ -64,17 +68,17 @@ class TrafficLight {
 fetch("./data/raleigh_traffic_lights.geojson")
   .then(r => r.json())
   .then(data => {
-    L.geoJSON(data, {
-      pointToLayer: (_, latlng) => {
-        allTrafficLights.push(new TrafficLight(latlng.lat, latlng.lng));
-      }
+    data.features.forEach(f => {
+      const [lng, lat] = f.geometry.coordinates;
+      allTrafficLights.push(new TrafficLight(lat, lng));
     });
     console.log("Traffic lights loaded:", allTrafficLights.length);
-  });
+  })
+  .catch(err => console.error("Traffic light load failed", err));
 
 // ===================== LIGHT ENGINE =====================
 setInterval(() => {
-  visibleLights.forEach(l => l.tick());
+  allTrafficLights.forEach(l => l.tick());
 }, 1000);
 
 // ===================== CLICK HANDLING =====================
@@ -84,8 +88,7 @@ map.on("click", e => {
     startPoint = e.latlng;
     startMarker = L.marker(startPoint).addTo(map).bindPopup("Start").openPopup();
     clickStage = 1;
-  }
-  else if (clickStage === 1) {
+  } else {
     endPoint = e.latlng;
     endMarker = L.marker(endPoint).addTo(map).bindPopup("Destination").openPopup();
     buildRoute();
@@ -104,7 +107,7 @@ function buildRoute() {
       alternatives: true
     }),
     lineOptions: {
-      styles: [{ color: "blue", weight: 10, opacity: 0.9 }]
+      styles: [{ color: "blue", weight: 8, opacity: 0.9 }]
     },
     addWaypoints: false,
     draggableWaypoints: false,
@@ -112,15 +115,8 @@ function buildRoute() {
     showAlternatives: true
   }).addTo(map);
 
-  setTimeout(() => map.invalidateSize(), 50);
-
-  routingControl.on("routesfound", e => {
-    handleRoute(e.routes[0]);
-  });
-
-  routingControl.on("routeselected", e => {
-    handleRoute(e.route);
-  });
+  routingControl.on("routesfound", e => handleRoute(e.routes[0]));
+  routingControl.on("routeselected", e => handleRoute(e.route));
 }
 
 // ===================== ROUTE PROCESSING =====================
@@ -134,14 +130,12 @@ function showLightsForRoute(route) {
   visibleLights.forEach(l => l.hide());
   visibleLights = [];
 
-  const threshold = 0.0008;
+  const thresholdMeters = 40;
 
   allTrafficLights.forEach(light => {
-    const near = route.coordinates.some(pt => {
-      const dLat = pt.lat - light.lat;
-      const dLng = pt.lng - light.lng;
-      return Math.sqrt(dLat * dLat + dLng * dLng) < threshold;
-    });
+    const near = route.coordinates.some(pt =>
+      metersBetween(pt, light) < thresholdMeters
+    );
 
     if (near) {
       light.show();
