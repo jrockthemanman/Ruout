@@ -5,14 +5,6 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
   attribution: "© OpenStreetMap contributors"
 }).addTo(map);
-L.polyline(
-  [
-    [35.7796, -78.6382],
-    [35.7896, -78.6482]
-  ],
-  { color: "blue", weight: 8 }
-).addTo(map);
-
 
 // ===================== STATE =====================
 let clickStage = 0;
@@ -30,7 +22,7 @@ class TrafficLight {
     this.state = Math.random() > 0.5 ? "red" : "green";
 
     this.marker = L.circleMarker([lat, lng], {
-      radius: 5,
+      radius: 6,
       color: this.state,
       fillColor: this.state,
       fillOpacity: 1
@@ -54,7 +46,6 @@ fetch("./data/raleigh_traffic_lights.geojson")
       const [lng, lat] = feature.geometry.coordinates;
       allTrafficLights.push(new TrafficLight(lat, lng));
     });
-
     console.log("Traffic lights loaded:", allTrafficLights.length);
   })
   .catch(err => console.error("Failed to load traffic lights:", err));
@@ -85,29 +76,45 @@ map.on("click", e => {
   }
 });
 
-// ===================== ROUTING (BLUE LINE) =====================
+// ===================== ROUTING =====================
 function buildRoute() {
+  if (!startPoint || !endPoint) return;
+
   if (routingControl) map.removeControl(routingControl);
 
   routingControl = L.Routing.control({
-    waypoints: [startPoint, endPoint],
+    waypoints: [startPoint, endPoint].map(p => L.latLng(p.lat, p.lng)),
     router: L.Routing.osrmv1({
       serviceUrl: "https://router.project-osrm.org/route/v1/driving"
     }),
     lineOptions: {
-      styles: [
-        {
-          color: "#007bff", // strong blue
-          weight: 8,
-          opacity: 0.9
-        }
-      ]
+      styles: [{ color: "blue", weight: 8, opacity: 0.9 }]
     },
     addWaypoints: false,
     draggableWaypoints: false,
     fitSelectedRoutes: true,
     showAlternatives: false
   }).addTo(map);
+
+  routingControl.on("routesfound", e => handleRoute(e.routes[0]));
+  routingControl.on("routeselected", e => handleRoute(e.route));
+}
+
+// ===================== ROUTE PROCESSING =====================
+function handleRoute(route) {
+  updateETA(route);
+}
+
+// ===================== ETA =====================
+function updateETA(route) {
+  let eta = route.summary.totalTime;
+
+  allTrafficLights.forEach(light => {
+    if (light.state === "red") eta += 30; // approximate 30s delay
+  });
+
+  document.getElementById("etaValue").innerText =
+    (eta / 60).toFixed(1) + " min";
 }
 
 // ===================== RESET =====================
@@ -116,9 +123,3 @@ function resetAll() {
   if (startMarker) map.removeLayer(startMarker);
   if (endMarker) map.removeLayer(endMarker);
 }
-L.circleMarker([35.7796, -78.6382], {
-  radius: 10,
-  color: "red",
-  fillColor: "red",
-  fillOpacity: 1
-}).addTo(map);
