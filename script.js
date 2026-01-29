@@ -7,7 +7,7 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
   attribution: "© OpenStreetMap contributors"
 }).addTo(map);
-
+<div id="map" style="height: 600px;"></div>
 map.on("click", e => {
   alert("Map click detected");
 });
