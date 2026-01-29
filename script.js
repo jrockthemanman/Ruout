@@ -193,16 +193,40 @@ function activateRoute(index) {
 
 // ===================== CLICK HANDLING =====================
 map.on("click", e => {
+  // Ignore clicks that originate from UI overlays
+  if (e.originalEvent.target.closest("#etaBox")) return;
+
+  // Defensive: ensure Leaflet click has valid latlng
+  if (!e.latlng) return;
+
+  // FIRST CLICK → START
   if (clickStage === 0) {
     resetAll();
+
     startPoint = L.latLng(e.latlng.lat, e.latlng.lng);
-    startMarker = L.marker(startPoint).addTo(map).bindPopup("Start").openPopup();
+    startMarker = L.marker(startPoint)
+      .addTo(map)
+      .bindPopup("Start")
+      .openPopup();
+
     clickStage = 1;
-  } else {
+    return;
+  }
+
+  // SECOND CLICK → DESTINATION
+  if (clickStage === 1) {
     endPoint = L.latLng(e.latlng.lat, e.latlng.lng);
-    endMarker = L.marker(endPoint).addTo(map).bindPopup("Destination").openPopup();
-    buildRouteORS(startPoint, endPoint);
+    endMarker = L.marker(endPoint)
+      .addTo(map)
+      .bindPopup("Destination")
+      .openPopup();
+
     clickStage = 0;
+
+    // Slight delay prevents race condition with map redraws
+    setTimeout(() => {
+      buildRouteORS(startPoint, endPoint);
+    }, 0);
   }
 });
 
