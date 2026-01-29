@@ -5,6 +5,9 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
   attribution: "© OpenStreetMap contributors"
 }).addTo(map);
+map.on("click", e => {
+  alert("Map click detected");
+});
 
 // ===================== STATE =====================
 let clickStage = 0;
