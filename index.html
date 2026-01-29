@@ -2,43 +2,41 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Traffic-Light Aware Routing Demo</title>
-
+  <title>Traffic-Light Aware Routing</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Leaflet core -->
+  <!-- Leaflet -->
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   />
 
-  <!-- Leaflet Routing Machine -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css"
-  />
-
   <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
-  <div id="etaBox">
-    ETA: <span id="etaValue">--</span>
-  </div>
-
   <div id="map"></div>
 
-  <!-- Scripts (deferred so DOM is ready) -->
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    defer
-  ></script>
+  <!-- ETA box -->
+  <div id="etaBox">
+    <div class="eta-title">Estimated Time</div>
 
-  <script
-    src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"
-    defer
-  ></script>
+    <div class="route-option">
+      <span id="route1Eta">Route 1: --</span>
+      <button onclick="activateRoute(0)">Go</button>
+    </div>
 
-  <script src="script.js" defer></script>
+    <div class="route-option">
+      <span id="route2Eta">Route 2: --</span>
+      <button onclick="activateRoute(1)">Go</button>
+    </div>
+
+    <div class="eta-current">
+      Active ETA: <span id="etaValue">--</span>
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
